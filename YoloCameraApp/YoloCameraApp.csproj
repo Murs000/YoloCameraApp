@@ -9,8 +9,28 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Models\coco.names" />
+    <None Remove="Models\yolov4.cfg" />
+    <None Remove="Models\yolov4.weights" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Models\coco.names">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Models\yolov4.cfg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Models\yolov4.weights">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Emgu.CV" Version="4.10.0.5680" />
     <PackageReference Include="Emgu.CV.Bitmap" Version="4.10.0.5680" />
     <PackageReference Include="Emgu.CV.runtime.windows" Version="4.10.0.5680" />
+    <PackageReference Include="Emgu.CV.UI" Version="4.10.0.5680" />
   </ItemGroup>
 
 </Project>

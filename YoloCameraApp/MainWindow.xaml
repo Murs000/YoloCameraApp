@@ -5,8 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:YoloCameraApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Image x:Name="CameraImage" Stretch="Uniform" />
-    </Grid>
+        Title="MainWindow" Height="450" Width="800"
+        WindowStartupLocation="CenterScreen"
+        Background="Black"
+        ResizeMode="CanResizeWithGrip">
+
+    <!-- Viewbox scales layout proportionally -->
+    <Viewbox x:Name="CameraViewbox" Stretch="Uniform">
+        <Grid x:Name="LayoutRoot">
+            <Image x:Name="CameraImage" Stretch="Fill"/>
+            <Canvas x:Name="OverlayCanvas"
+                    IsHitTestVisible="False"
+                    Background="Transparent"/>
+        </Grid>
+    </Viewbox>
 </Window>
