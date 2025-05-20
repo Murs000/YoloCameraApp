@@ -36,83 +36,85 @@ namespace YoloCameraApp.Helpers
             _outputLayerNames = _net.UnconnectedOutLayersNames;
         }
 
-        public List<YoloPrediction> Predict(Mat frame)
+        public List<YoloPrediction> Predict(Mat originalFrame)
         {
             List<YoloPrediction> results = new();
 
-            float xScale = frame.Width / 416.0f;
-            float yScale = frame.Height / 416.0f;
+            int originalWidth = originalFrame.Width;
+            int originalHeight = originalFrame.Height;
 
-            using (var blob = DnnInvoke.BlobFromImage(frame, 1 / 255.0, new Size(416, 416), new MCvScalar(), true, false))
+            // 1. Keep original frame (no resize)
+            Mat resized = originalFrame.Clone();
+
+            // 2. Create blob from original image size
+            using var blob = DnnInvoke.BlobFromImage(resized, 1 / 255.0, new Size(originalWidth, originalHeight), new MCvScalar(), true, false);
+            _net.SetInput(blob);
+
+            // 3. Run forward pass
+            using VectorOfMat output = new();
+            _net.Forward(output, _outputLayerNames);
+
+            List<Rectangle> boxes = new();
+            List<int> classIds = new();
+            List<float> confidences = new();
+
+            for (int i = 0; i < output.Size; i++)
             {
-                _net.SetInput(blob);
-                using (VectorOfMat output = new VectorOfMat())
+                float[,] data = (float[,])output[i].GetData();
+                for (int j = 0; j < data.GetLength(0); j++)
                 {
-                    _net.Forward(output, _outputLayerNames);
-
-                    List<Rectangle> boxes = new();
-                    List<int> classIds = new();
-                    List<float> confidences = new();
-
-                    for (int i = 0; i < output.Size; i++)
+                    float confidence = data[j, 4];
+                    if (confidence > 0.5)
                     {
-                        float[,] data = (float[,])output[i].GetData();
+                        float[] scores = new float[_classLabels.Count];
+                        for (int k = 0; k < scores.Length; k++)
+                            scores[k] = data[j, 5 + k];
 
-                        for (int j = 0; j < data.GetLength(0); j++)
+                        int classId = Array.IndexOf(scores, scores.Max());
+                        float score = scores[classId];
+
+                        if (score > 0.5)
                         {
-                            float confidence = data[j, 4];
-                            if (confidence > 0.5)
-                            {
-                                float[] scores = new float[_classLabels.Count];
-                                for (int k = 0; k < scores.Length; k++)
-                                    scores[k] = data[j, 5 + k];
+                            float centerX = data[j, 0] * originalWidth;
+                            float centerY = data[j, 1] * originalHeight;
+                            float width = data[j, 2] * originalWidth;
+                            float height = data[j, 3] * originalHeight;
 
-                                int classId = Array.IndexOf(scores, scores.Max());
-                                float score = scores[classId];
+                            int x = (int)(centerX - width / 2);
+                            int y = (int)(centerY - height / 2);
+                            int w = (int)(width);
+                            int h = (int)(height);
 
-                                if (score > 0.5)
-                                {
-                                    float centerX = data[j, 0] * 416;
-                                    float centerY = data[j, 1] * 416;
-                                    float width = data[j, 2] * 416;
-                                    float height = data[j, 3] * 416;
-
-                                    int scaledX = (int)((centerX - width / 2) * xScale);
-                                    int scaledY = (int)((centerY - height / 2) * yScale);
-                                    int scaledWidth = (int)(width * xScale);
-                                    int scaledHeight = (int)(height * yScale);
-
-                                    boxes.Add(new Rectangle(scaledX, scaledY, scaledWidth, scaledHeight));
-                                    classIds.Add(classId);
-                                    confidences.Add(score);
-                                }
-                            }
+                            boxes.Add(new Rectangle(x, y, w, h));
+                            classIds.Add(classId);
+                            confidences.Add(score);
                         }
-                    }
-
-                    int[] indices = DnnInvoke.NMSBoxes(boxes.ToArray(), confidences.ToArray(), 0.5f, 0.4f);
-
-                    foreach (int idx in indices)
-                    {
-                        results.Add(new YoloPrediction
-                        {
-                            Label = _classLabels[classIds[idx]],
-                            Box = boxes[idx],
-                            Confidence = confidences[idx]
-                        });
                     }
                 }
             }
 
+            int[] indices = DnnInvoke.NMSBoxes(boxes.ToArray(), confidences.ToArray(), 0.5f, 0.4f);
+
+            foreach (int idx in indices)
+            {
+                results.Add(new YoloPrediction
+                {
+                    Label = _classLabels[classIds[idx]],
+                    Box = boxes[idx],
+                    Confidence = confidences[idx]
+                });
+            }
+
             return results;
         }
+
 
         public BitmapImage ConvertMatToBitmapImage(Mat mat)
         {
             using MemoryStream ms = new();
             mat.ToImage<Bgr, byte>().ToBitmap().Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
             ms.Seek(0, SeekOrigin.Begin);
-            BitmapImage image = new();
+            BitmapImage image = new(); 
             image.BeginInit();
             image.StreamSource = ms;
             image.CacheOption = BitmapCacheOption.OnLoad;

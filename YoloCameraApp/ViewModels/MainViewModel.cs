@@ -1,4 +1,5 @@
 ﻿using Emgu.CV;
+using Emgu.CV.CvEnum;
 using Emgu.CV.Dnn;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
@@ -24,6 +25,9 @@ namespace YoloCameraApp.ViewModels
         private BitmapImage _cameraImage;
         private string _summary;
 
+        public double DisplayedImageWidth { get; set; }
+        public double DisplayedImageHeight { get; set; }
+
         public ObservableCollection<YoloPrediction> Predictions { get; set; } = new();
         public ObservableCollection<OverlayItem> OverlayItems { get; set; } = new();
 
@@ -48,52 +52,63 @@ namespace YoloCameraApp.ViewModels
         private void StartCamera()
         {
             _capture = new VideoCapture(0, VideoCapture.API.DShow);
+
+            DisplayedImageWidth = (int)_capture.Get(CapProp.FrameWidth);
+            DisplayedImageHeight = (int)_capture.Get(CapProp.FrameHeight);
+
             _capture.ImageGrabbed += ProcessFrame;
             _capture.Start();
+
         }
         private void ProcessFrame(object sender, EventArgs e)
         {
-            try
+            Mat frame = new Mat();
+            _capture.Retrieve(frame);
+
+            if (frame.IsEmpty)
+                return;
+
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                Mat frame = new Mat();
-                _capture.Retrieve(frame);
+                CameraImage = _processor.ConvertMatToBitmapImage(frame);
+            });
 
-                if (frame.IsEmpty)
-                    return;
+            var results = _processor.Predict(frame);
 
-                Application.Current.Dispatcher.Invoke(() =>
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Predictions.Clear();
+                OverlayItems.Clear();
+
+                // Calculate scale factors from original frame size to displayed image size
+                double scaleX = 1.0, scaleY = 1.0;
+
+                if (DisplayedImageWidth > 0 && DisplayedImageHeight > 0)
                 {
-                    CameraImage = _processor.ConvertMatToBitmapImage(frame);
-                });
+                    scaleX = DisplayedImageWidth / frame.Width;
+                    scaleY = DisplayedImageHeight / frame.Height;
+                }
 
-                var results = _processor.Predict(frame);
-                Application.Current.Dispatcher.Invoke(() =>
+                foreach (var item in results)
                 {
-                    Predictions.Clear();
-                    OverlayItems.Clear();
+                    Predictions.Add(item);
 
-                    foreach (var item in results)
+                    // Scale the bounding box coords before adding to OverlayItems
+                    OverlayItems.Add(new OverlayItem
                     {
-                        Predictions.Add(item);
-                        OverlayItems.Add(new OverlayItem
-                        {
-                            Left = item.Box.X,
-                            Top = item.Box.Y,
-                            Width = item.Box.Width,
-                            Height = item.Box.Height,
-                            Label = $"{item.Label} ({item.Confidence:P0})"
-                        });
-                    }
+                        Left = item.Box.X * scaleX,
+                        Top = item.Box.Y * scaleY,
+                        Width = item.Box.Width * scaleX,
+                        Height = item.Box.Height * scaleY,
+                        Label = $"{item.Label} ({item.Confidence:P0})"
+                    });
+                }
 
-                    Summary = Predictions.Count > 0
-                        ? string.Join(", ", Predictions.GroupBy(p => p.Label).Select(g => $"{g.Key}: {g.Count()}"))
-                        : "None";
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error: {ex.Message}");
-            }
+                Summary = Predictions.Count > 0
+                    ? string.Join(", ", Predictions.GroupBy(p => p.Label).Select(g => $"{g.Key}: {g.Count()}"))
+                    : "None";
+            });
+
         }
 
         public void Dispose()

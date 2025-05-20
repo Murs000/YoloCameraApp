@@ -15,14 +15,11 @@
         <Viewbox x:Name="CameraViewbox" Stretch="Uniform">
             <Grid x:Name="LayoutRoot">
                 <!-- Bind to an ImageSource property -->
-                <Image x:Name="CameraImage" Stretch="Fill"
+                <Image x:Name="CameraImage"
                        Source="{Binding CameraImage}" />
-
-                <!-- Bind overlay shapes (like bounding boxes) to a collection if needed -->
-                <!-- Overlay container -->
-                <Canvas x:Name="OverlayCanvas"
-        IsHitTestVisible="False"
-        Background="Transparent">
+                
+                <Canvas x:Name="OverlayCanvas" IsHitTestVisible="False" Background="Transparent"
+                        Width="{Binding DisplayedImageWidth}" Height="{Binding DisplayedImageHeight}">
                     <ItemsControl ItemsSource="{Binding OverlayItems}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -40,7 +37,7 @@
 
                                     <!-- Label -->
                                     <TextBlock Text="{Binding Label}"
-                               Foreground="Yellow"
+                               Foreground="Green"
                                Background="#66000000"
                                FontWeight="Bold"
                                FontSize="12"
