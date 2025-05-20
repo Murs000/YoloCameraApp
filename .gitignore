@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+Models\
+YoloCameraApp/Models/coco.names
+YoloCameraApp/Models/yolov4.cfg
+YoloCameraApp/Models/yolov4.weights
