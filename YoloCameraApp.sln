@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YoloCameraApp", "YoloCameraApp\YoloCameraApp.csproj", "{862C3F7E-DD68-4FC8-9494-497D2B0312EE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{862C3F7E-DD68-4FC8-9494-497D2B0312EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{862C3F7E-DD68-4FC8-9494-497D2B0312EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{862C3F7E-DD68-4FC8-9494-497D2B0312EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{862C3F7E-DD68-4FC8-9494-497D2B0312EE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2EA158D3-A6BD-42B6-85E8-FAA93B3B67DC}
+	EndGlobalSection
+EndGlobal
