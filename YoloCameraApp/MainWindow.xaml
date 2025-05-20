@@ -10,13 +10,65 @@
         Background="Black"
         ResizeMode="CanResizeWithGrip">
 
-    <!-- Viewbox scales layout proportionally -->
-    <Viewbox x:Name="CameraViewbox" Stretch="Uniform">
-        <Grid x:Name="LayoutRoot">
-            <Image x:Name="CameraImage" Stretch="Fill"/>
-            <Canvas x:Name="OverlayCanvas"
-                    IsHitTestVisible="False"
-                    Background="Transparent"/>
-        </Grid>
-    </Viewbox>
+    <Grid>
+        <!-- Viewbox scales the camera content and overlays -->
+        <Viewbox x:Name="CameraViewbox" Stretch="Uniform">
+            <Grid x:Name="LayoutRoot">
+                <!-- Bind to an ImageSource property -->
+                <Image x:Name="CameraImage" Stretch="Fill"
+                       Source="{Binding CameraImage}" />
+
+                <!-- Bind overlay shapes (like bounding boxes) to a collection if needed -->
+                <!-- Overlay container -->
+                <Canvas x:Name="OverlayCanvas"
+        IsHitTestVisible="False"
+        Background="Transparent">
+                    <ItemsControl ItemsSource="{Binding OverlayItems}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Canvas />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <!-- Bounding box -->
+                                    <Rectangle Stroke="{Binding Stroke}"
+                               StrokeThickness="{Binding StrokeThickness}"
+                               Width="{Binding Width}"
+                               Height="{Binding Height}" />
+
+                                    <!-- Label -->
+                                    <TextBlock Text="{Binding Label}"
+                               Foreground="Yellow"
+                               Background="#66000000"
+                               FontWeight="Bold"
+                               FontSize="12"
+                               Margin="2"
+                               VerticalAlignment="Top" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter">
+                                <Setter Property="Canvas.Left" Value="{Binding Left}" />
+                                <Setter Property="Canvas.Top" Value="{Binding Top}" />
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                    </ItemsControl>
+                </Canvas>
+            </Grid>
+        </Viewbox>
+
+        <!-- Entity count text displayed on top of Viewbox -->
+        <TextBlock x:Name="EntityCountTextBlock"
+                   FontSize="16"
+                   Foreground="White"
+                   Background="#99000000"
+                   Padding="5"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Top"
+                   Margin="10"
+                   Text="{Binding Summary}" />
+    </Grid>
 </Window>
